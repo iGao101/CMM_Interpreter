@@ -18,6 +18,7 @@ namespace Interpreter.Semantics
         public int index = 0;                                                      //当if while分支语句出现时，使用此变量便于语义的分析
         public bool isJudge = false;                                         //用于错误处理
         public bool isLoop = false;
+        public bool isArray = false;                                         //用于动态确定数组长度
         public bool isBreak = false;                                         //判断是否发生中断
         public bool isContinue = false;
         public int JudgeIndex = 0;                                          //存储循环条件语句位置，便于continue分析
@@ -34,6 +35,7 @@ namespace Interpreter.Semantics
         public string op = null;
         public ArrayList VarSet = new ArrayList();                    //保存变量
         public ArrayList ListSet = new ArrayList();                    //保存数组
+        public ArrayList ArraySet = new ArrayList();                 //多维数组
         public ArrayList FunctionSet = new ArrayList();           //函数集合
         public ArrayList OutputInfo = new ArrayList();            //保存输出信息
         public ArrayList MidCodeList = new ArrayList();          //保存分析得到的四元式
@@ -42,12 +44,13 @@ namespace Interpreter.Semantics
         {
             Coding = array;
             Errors = errors;
-        }   
-        public void Init(ArrayList varSet, ArrayList listSet, ArrayList functionSet)  //初始化VarSet\ListSet\FunctionSet
+        }
+        public void Init(ArrayList varSet, ArrayList listSet, ArrayList functionSet, ArrayList arraySet)  //初始化VarSet\ListSet\FunctionSet
         {
             VarSet = varSet;
             ListSet = listSet;
             FunctionSet = functionSet;
+            ArraySet = arraySet;
             n = 0;
             while (n < Coding.Count - 1)
             {
@@ -167,47 +170,7 @@ namespace Interpreter.Semantics
             next = GetNext(ref n);
             if(next == "[")   //如：a[3] = 1;
             {
-                next = GetNext(ref n);  //指向常数或者表达式
-                int temp = n;
-                if (IsLenghtRight())      //数组长度索引中不能出现标识符
-                {
-                    n = temp;
-                    next = ((Lexical.Word)Coding[n]).value;  //调用IsLengthRight后重新归位next
-                    Expression();
-                    next = GetNext(ref n);  //跳过数组右侧 ]
-                    if (IsInt(result))
-                    {
-                        ListType list = GetList(name);
-                        int index = int.Parse(result);
-                        if ( index >= list.Length)       //索引大于数组长度
-                        {
-                            Errors.Add(new Lexical.Error(13, ((Lexical.Word)Coding[n]).line, ""));
-                            DealError();
-                            return;
-                        }
-                        next = GetNext(ref n);         //跳过等号
-                        Expression();
-                        if (!TypeCheck(list.Type))
-                        {
-                            Errors.Add(new Lexical.Error(18, ((Lexical.Word)Coding[n - 1]).line, ""));
-                            DealError();
-                            return;
-                        }
-                        list.SetValue(index, result);  //给数组赋值
-                    }
-                    else  //错误处理
-                    {
-                        Errors.Add(new Lexical.Error(11, ((Lexical.Word)Coding[n - 1]).line, ""));
-                        DealError();
-                        return;
-                    }
-                }
-                else  //错误处理
-                {
-                    Errors.Add(new Lexical.Error(11, ((Lexical.Word)Coding[n - 1]).line, ""));
-                    DealError();
-                    return;
-                }
+                SetListValue(name);  //给数组赋值
             }
             else
             {
@@ -228,6 +191,24 @@ namespace Interpreter.Semantics
                         return;
                     }
                 }
+                else
+                {
+                    ListType list = GetList(name);
+                   if(list != null)
+                    {
+                        if (!ValuedList(list))        //数组赋值,若发生错误return
+                            return;
+                    }
+                    else  //多维数组
+                    {
+                        ArrayType array = GetArray(name);
+                        if(array != null)
+                        {
+                            if (!ValuedArray(array))
+                                return;
+                        }
+                    }
+                }
             }
             if (next == ";")
                 next = GetNext(ref n);
@@ -239,55 +220,49 @@ namespace Interpreter.Semantics
         }
         private void Array()                 //数组
         {
-            //此处为声明，和赋值有差别，比如a[]
-            //层数为0数组默认初始化
             string name = ((Lexical.Word)Coding[n]).value;   //存储赋值语句左侧的标识符
-            ListType list = GetList(name);
             next = GetNext(ref n);  //指向数组左侧[
-            next = GetNext(ref n);
-            if(next != "]")  //由后面动态确定长度在前一阶段已经分析了
+            if (!ListCheck())
+                return;
+
+            if (next == "[")  //多维数组
             {
-                int temp = n;
-                if (IsLenghtRight())  //数组长度定义中没有出现标识符
+                ArrayType array = GetArray(name);
+                if(!isArray)
+                    array.Length = int.Parse(result);  //设置多维数组长度
+                while (n < Coding.Count && next == "[")
                 {
-                    n = temp;
-                    next = ((Lexical.Word)Coding[n]).value;  //调用IsLengthRight后重新归位next
+                    next = GetNext(ref n);
                     Expression();
                     next = GetNext(ref n);  //跳过数组右侧 ]
-                    if (IsInt(result))
-                    {
-                        list.Length = int.Parse(result);  //设置数组长度
-                        if(next == ";" || next == ",")     //给数组赋初值
-                        {
-                            DefaultList(list);
-                            if (next == ",")
-                                Statement();
-                        }
-                            
-                        else //等号的情况,如 int a[3] = {1,2,3}
-                        {
-                            next = GetNext(ref n);  //指向左侧大括号
-                            if (!ValuedList(list))        //数组赋值,若发生错误return
-                                return;
-                            next = GetNext(ref n);  //跳过右侧大括号
-                            if(next == ",")
-                                Statement();
-                        }
-                    }
-                    else  //错误处理
+                    if (!IsInt(result) || (IsInt(result) && int.Parse(result) <= 0))
                     {
                         Errors.Add(new Lexical.Error(11, ((Lexical.Word)Coding[n - 1]).line, ""));
                         DealError();
                         return;
                     }
                 }
-                else  //错误处理
+                if (next == "=")  //声明的时候即初始化
                 {
-                    Errors.Add(new Lexical.Error(11, ((Lexical.Word)Coding[n - 1]).line, ""));
-                    DealError();
-                    return;
+                    if (!ValuedArray(array))
+                        return;
                 }
+                return;
             }
+
+            ListType list = GetList(name);
+            if(!isArray)
+                list.Length = int.Parse(result);  //设置数组长度
+            if (next == ";" || next == ",")        //给数组赋初值
+                DefaultList(list);
+            else //等号的情况,如 int a[3] = {1,2,3}
+            {
+                next = GetNext(ref n);  //指向左侧大括号
+                if (!ValuedList(list))        //数组赋值,若发生错误return
+                    return;
+            }
+            if (isArray)
+                isArray = false;
         }
         private void Function()           //函数
         {
@@ -593,6 +568,8 @@ namespace Interpreter.Semantics
             }
             else
                 Expression();
+            result = result.Replace("'", "");
+            result = result.Replace("\"", "");
             next = GetNext(ref n);  //跳过printf最右侧小括号
             OutputInfo.Add(result);
             next = GetNext(ref n);   //跳过；
@@ -1081,36 +1058,7 @@ namespace Interpreter.Semantics
                 }
                 else if(next == "[")    //数组
                 {
-                    ListType list = GetList(name);
-                    next = GetNext(ref n);
-                    Expression();
-                    next = GetNext(ref n);  //跳过数组右侧 ]
-                    if (IsInt(result))
-                    {
-                        if (int.Parse(result) >= list.Length)  //索引大于数组长度
-                        {
-                            Errors.Add(new Lexical.Error(13, ((Lexical.Word)Coding[n - 1]).line, ""));
-                            DealError();
-                            return;
-                        }
-                        else
-                        {
-                            if(list.Length != list.GetValue().Count)  //未初始化
-                            {
-                                Errors.Add(new Lexical.Error(17, ((Lexical.Word)Coding[n]).line, name));
-                                DealError();
-                                return;
-                            }
-                            else  //给结果赋值
-                                result = list.GetValue(int.Parse(result));
-                        }
-                    }
-                    else  //错误处理
-                    {
-                        Errors.Add(new Lexical.Error(11, ((Lexical.Word)Coding[n - 1]).line, ""));
-                        DealError();
-                        return;
-                    }
+                    GetListValue(name);
                  }
                 else                            //标识符    注意不同类型标识符，如数组
                 {
@@ -1128,6 +1076,34 @@ namespace Interpreter.Semantics
                             Errors.Add(new Lexical.Error(17, ((Lexical.Word)Coding[n]).line, name));
                             DealError();
                             return;
+                        }
+                    }
+                    else
+                    {
+                        ListType list = GetList(name);
+                        if(list != null)
+                        {
+                            if(list.Type == 3)  //输出char数组全部内容
+                            {
+                                result = null;
+                                foreach (string i in list.GetValue().Values)
+                                    result += i;
+                                next = GetNext(ref n);
+                            }
+                            else  //其他类型数组即输出第一个元素
+                            {
+                                if (list.Length != list.GetValue().Count)  //未初始化
+                                {
+                                    Errors.Add(new Lexical.Error(17, ((Lexical.Word)Coding[n]).line, name));
+                                    DealError();
+                                    return;
+                                }
+                                else  //给结果赋值
+                                {
+                                    result = list.GetValue(0);
+                                    next = GetNext(ref n);
+                                }   
+                            }
                         }
                     }
                 }
@@ -1169,6 +1145,24 @@ namespace Interpreter.Semantics
                 }
             return list;
         }
+        private ArrayType GetArray(string name)                //根据名字获取多维数组
+        {
+            ArrayType list = null;
+            int line = ((Lexical.Word)Coding[n]).line;
+            foreach (ArrayType va in ArraySet)
+                if (va.Name == name && va.Level == level && (va.Count >= line || va.Level == 0))
+                {
+                    list = va;
+                    return list;
+                }
+            foreach (ArrayType va in ArraySet)
+                if (va.Name == name && va.Level < level && (va.Count >= line || va.Level == 0))
+                {
+                    list = va;
+                    return list;
+                }
+            return list;
+        } 
         private FunctionType GetFunction(string name)     //根据名称获取函数
         {
             FunctionType list = null;
@@ -1343,6 +1337,12 @@ namespace Interpreter.Semantics
         private void DefaultList(ListType list)                       //最外层数组赋初值
         {
             int length = list.Length;  //数组长度
+            if(length == 0)
+            {
+                Errors.Add(new Lexical.Error(11, ((Lexical.Word)Coding[n - 1]).line, ""));
+                DealError();
+                return;
+            }
             switch (list.Type)
             {
                 case 0:  //int
@@ -1391,14 +1391,17 @@ namespace Interpreter.Semantics
                 else if (next != "," && next != "}")
                     element.Add(next);
             }
-            if (num > list.Length)  //元素数量超过数组长度，报错
+            if (!isArray && num > list.Length)  //元素数量超过数组长度，报错
             {
                 Errors.Add(new Lexical.Error(20, ((Lexical.Word)Coding[n - 1]).line, ""));
                 DealError();
                 return false;
             }
+            if (isArray)  //根据元素个数默认赋值
+                list.Length = element.Count;
             for (int i = 0; i < element.Count; i++)  //赋值
                 list.SetValue(i, (string)element[i]);
+            
             if(element.Count < list.Length)            //后面未赋值的元素进行初始化
             {
                 switch (list.Type)
@@ -1416,7 +1419,167 @@ namespace Interpreter.Semantics
                         break;
                 }
             }
+            next = GetNext(ref n);  //跳过右侧大括号
             return true;
+        }
+        private bool ValuedArray(ArrayType array)             //根据表达式初始化多维数组
+        {
+            ArrayList parm = new ArrayList();
+            next = GetNext(ref n);  //跳过等号
+            next = GetNext(ref n);  //跳过左侧第一个大括号
+            string t = null;
+            while (n < Coding.Count - 1 && next != "}")
+            {
+                while (n < Coding.Count - 1 && next != "}")
+                {
+                    t += next;
+                    next = GetNext(ref n);
+                }
+                t += next;
+                next = GetNext(ref n);
+                parm.Add(t);
+                t = null;
+
+                if (next == ",")
+                {
+                    next = GetNext(ref n);
+                }
+            }
+            next = GetNext(ref n);  //跳过最右侧大括号
+            if (!isArray && parm.Count > array.Length)
+            {
+                Errors.Add(new Lexical.Error(20, ((Lexical.Word)Coding[n - 1]).line, ""));
+                DealError();
+                return false;
+            }
+            if (isArray)  //根据元素个数默认赋值
+                array.Length = parm.Count;
+            for (int i = 0; i < parm.Count; i++)  //多维数组添加元素
+                array.SetValue(i, (string)parm[0]);
+            return true;
+        }
+        private bool ListCheck()                                           //检查数组访问是否越界等问题
+        {
+            next = GetNext(ref n);  //指向常数或者表达式
+            if (next == "]" && ((Lexical.Word)Coding[n + 1]).value == "=")
+            {
+                isArray = true;
+                next = GetNext(ref n);
+                return true;
+            }
+            if (next == "]" && ((Lexical.Word)Coding[n + 1]).value != "=")
+            {
+                Errors.Add(new Lexical.Error(11, ((Lexical.Word)Coding[n - 1]).line, ""));
+                DealError();
+                return false;
+            }
+            int temp = n;
+            if (!IsLenghtRight())      //数组长度索引中不能出现标识符
+            {
+                Errors.Add(new Lexical.Error(11, ((Lexical.Word)Coding[n - 1]).line, ""));
+                DealError();
+                return false;
+            }
+            n = temp;
+            next = ((Lexical.Word)Coding[n]).value;  //调用IsLengthRight后重新归位next
+            Expression();
+            next = GetNext(ref n);  //跳过数组右侧 ]
+            if (!IsInt(result) || (IsInt(result) && int.Parse(result) < 0))
+            {
+                Errors.Add(new Lexical.Error(11, ((Lexical.Word)Coding[n - 1]).line, ""));
+                DealError();
+                return false;
+            }
+            return true;
+        }
+        private void SetListValue(string name)                    //赋值
+        {
+            if (!ListCheck())  //检查访问是否出错
+                return;
+            ListType list = GetList(name);
+            int index = int.Parse(result);
+            if(list != null)
+            {
+                if (index >= list.Length)       //索引大于数组长度
+                {
+                    Errors.Add(new Lexical.Error(13, ((Lexical.Word)Coding[n]).line, ""));
+                    DealError();
+                    return;
+                }
+                next = GetNext(ref n);         //跳过等号
+                Expression();
+                if (!TypeCheck(list.Type))
+                {
+                    Errors.Add(new Lexical.Error(18, ((Lexical.Word)Coding[n - 1]).line, ""));
+                    DealError();
+                    return;
+                }
+                list.SetValue(index, result);  //给数组赋值
+            }
+        }
+        private string[] GetElements(string str)
+        {
+            if (str.Length <= 2)
+                return null;
+            string temp = null;
+            for (int i = 1; i < str.Length - 1; i++)
+                temp += str[i];
+            return temp.Split(',');
+        }                 //根据字符串拆解元素
+        private void GetListValue(string name)                    //获取数组值
+        {
+            if (!ListCheck())
+                return;
+            ListType list = GetList(name);
+            if (list != null)
+            {
+                if (int.Parse(result) >= list.Length)  //索引大于数组长度
+                {
+                    Errors.Add(new Lexical.Error(13, ((Lexical.Word)Coding[n - 1]).line, ""));
+                    DealError();
+                    return;
+                }
+                else
+                {
+                    if (list.Length != list.GetValue().Count)  //未初始化
+                    {
+                        Errors.Add(new Lexical.Error(17, ((Lexical.Word)Coding[n]).line, name));
+                        DealError();
+                        return;
+                    }
+                    else  //给结果赋值
+                        result = list.GetValue(int.Parse(result));
+                }
+            }
+            else
+            {
+                ArrayType array = GetArray(name);
+                if (array != null)
+                {
+                    if (int.Parse(result) >= array.Length)  //索引大于数组长度
+                    {
+                        Errors.Add(new Lexical.Error(13, ((Lexical.Word)Coding[n - 1]).line, ""));
+                        DealError();
+                        return;
+                    }
+                    string all = array.GetValue(int.Parse(result));  //可能是多维度的数据
+                    while(n <Coding.Count -1 && next == "[")
+                    {
+                        if (!ListCheck())
+                            return;
+                        int index = int.Parse(result);  //获得索引
+                        string[] elements = GetElements(all);
+                        if(index >= array.Length)
+                        {
+                            Errors.Add(new Lexical.Error(13, ((Lexical.Word)Coding[n - 1]).line, ""));
+                            DealError();
+                            return;
+                        }
+                        all = elements[index];
+                    }
+                    result = all;
+                }
+            }
         }
         private void ValuedFunction(string name)              //根据参数调用函数
         {
@@ -1469,17 +1632,18 @@ namespace Interpreter.Semantics
             isFunction = false;
             level--;
         }
-        private bool IsLenghtRight()                                     //数组长度或索引不能出现标识符
+        private bool IsLenghtRight()                                    //数组长度或索引不能出现标识符
         {
             while(n < Coding.Count && next != "]")
             {
-                next = GetNext(ref n);
                 if (IsLetter(next[0]))
                     return false;
+                next = GetNext(ref n);
+
             }
             return true;
         }
-        private int GetTerminal(string type)                          //获取循环结束位置
+        private int GetTerminal(string type)                         //获取循环结束位置
         {
             int terminal = 0;
             switch (type)
@@ -1611,6 +1775,7 @@ namespace Interpreter.Semantics
             {
                 while (n < Coding.Count - 1 && ((Lexical.Word)Coding[n]).line < line + 1 && next != ";")
                     next = GetNext(ref n);
+                next = GetNext(ref n);
             }
         }
     }

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Interpreter.Semantics
@@ -15,6 +16,7 @@ namespace Interpreter.Semantics
         public ArrayList VarSet = new ArrayList();                   //保存变量
         public ArrayList ListSet = new ArrayList();                   //保存集合
         public ArrayList FunctionSet = new ArrayList();          //函数集合
+        public ArrayList ArraySet = new ArrayList();                //多维数组集合
         public int i = 0;                                                             //Coding索引
         public int level = 0;                                                       //表示层数，当进入if while等代码块时自增
         public int count = 0;                                                     //用于区分不同分支的局部变量
@@ -32,9 +34,6 @@ namespace Interpreter.Semantics
         FunctionType funtion;                                                  //函数
 
         public IdentifierAnalysis(ArrayList arrayList, ArrayList errors) { Coding = arrayList; Errors = errors; }
-        //
-        //待完善内容 else if 和 函数的return
-        //
         public string GetNext(ref int i)        //取下一个标识符值
         {
             if (i < Coding.Count - 1)
@@ -111,15 +110,6 @@ namespace Interpreter.Semantics
                 case "identifier":
                     if (!Check())
                         Errors.Add(new Lexical.Error(7, ((Lexical.Word)Coding[i]).line, name));
-                    next = GetNext(ref i);
-                    if(next == "[")
-                    {
-                        next = GetNext(ref i);
-                        string num = next;                  //判断[]中是否为常数
-                        next = GetNext(ref i);
-                        if (int.Parse(num) < 0 && next == "]")
-                            Errors.Add(new Lexical.Error(11, ((Lexical.Word)Coding[i]).line, ""));
-                    }
                     Jump();
                     break;
                 default:   //比如赋值、输出语句等，直接跳过
@@ -271,27 +261,31 @@ namespace Interpreter.Semantics
         }
         private void Array()                         //数组
         {
-            next = GetNext(ref i);
-            string num = next;                  //判断[]中是否为常数
+            next = GetNext(ref i);              //跳过左侧[
+            while( i < Coding.Count -1 && next != "]")
+                next = GetNext(ref i);
+            next = GetNext(ref i);              //跳过右侧
 
-            int tag = ((Lexical.Word)Coding[i]).tag;
-            next = GetNext(ref i);
-            ListType list;
             int range = GetRange();
             if (level == 0)
                 range = 0;
-            if (tag == 4 && next == "]")  //数组长度已定
+            
+            if (next == "[")                          //多维数组的情况
             {
-                if (int.Parse(num) <= 0)
+                int n = 2;  //数组维度
+                while(i < Coding.Count && next != ";")
                 {
-                    Errors.Add(new Lexical.Error(11, ((Lexical.Word)Coding[i]).line, ""));
-                    return;
+                    next = GetNext(ref i);
+                    if (next == "[")
+                        n++;
                 }
-                else
-                    list = new ListType(name, type, int.Parse(num), level, range);
+                ArrayType arrayType = new ArrayType(name, type, level, range, n);
+                ArraySet.Add(arrayType);
+                return;
             }
-            else                                         //动态决定长度或者长度为表达式的情况
-                list = new ListType(name, type, level, range);
+
+            ListType list;
+            list = new ListType(name, type, level, range);
 
             if (!IsReDefined(name, level, range))  //判断是否重定义
                 ListSet.Add(list);
@@ -301,7 +295,7 @@ namespace Interpreter.Semantics
             string value = ((Lexical.Word)Coding[i +1]).value;  //向后看，判断数组是否初始化
             if (value == "=")  //int a[3]={1,2,3};
             {
-                if(type == 3 && ((Lexical.Word)Coding[i + 2]).value.Contains("\""))  //此为字符串给char数组赋值的情况，MidCode有长度处理，因此这里略过
+                if(type == 3 && ((Lexical.Word)Coding[i + 2]).value.Contains("\""))  //此为字符串给char数组赋值的情况，MidCode有处理，因此这里略过
                 {  
                     next = GetNext(ref i);
                     next = GetNext(ref i);
@@ -532,6 +526,11 @@ namespace Interpreter.Semantics
                 if (list.Name == name && list.Level <= level && (list.Count >= line || list.Level == 0))
                     return true;
             }
+            foreach (ArrayType list in ArraySet)
+            {
+                if (list.Name == name && list.Level <= level && (list.Count >= line || list.Level == 0))
+                    return true;
+            }
             foreach (FunctionType function in FunctionSet)
             {
                 if (function.Name == name && function.Level <= level)
@@ -584,9 +583,14 @@ namespace Interpreter.Semantics
                 if (list.Name == name && list.Level == level && list.Count == count)
                     return true;
             }
+            foreach (ArrayType list in ArraySet)
+            {
+                if (list.Name == name && list.Level == level && list.Count == count)
+                    return true;
+            }
             return false;
         }
-        private int GetRange()                   //获取局部变量的作用范围
+        private int GetRange()                      //获取局部变量的作用范围
         {
             int temp = i;
             if(((isJudge !=0 || isLoop != 0 || isBlock != 0) && isSingle) || isFunction || isFor)
@@ -599,6 +603,10 @@ namespace Interpreter.Semantics
             i = temp - 1;
             next = GetNext(ref i);
             return index;
+        }
+        private bool IsInt(string value)         //判断字符串是否为整数
+        {
+            return Regex.IsMatch(value, @"^[+|-]?\d*$");
         }
     }
 }
