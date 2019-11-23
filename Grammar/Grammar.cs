@@ -292,7 +292,7 @@ namespace Interpreter.Grammar
                         int j = (int)index[num - 1];
                         if (vs[j] == non)
                             num--;
-                        if ((((string)dictionary1.Key == "Loop1" || (string)dictionary1.Key == "Loop4" ) && vs[j] == "Judge") || ((string)dictionary1.Key == "Judge2" && vs[j] == "Judge3"))
+                        if ((((string)dictionary1.Key == "Loop1" || (string)dictionary1.Key == "Loop4" ) && vs[j] == "Judge") || ((string)dictionary1.Key == "Judge2" && vs[j] == "Judge3") || ((string)dictionary1.Key == "List" && vs[j] == "Statement4"))
                         {
                             f.UnionWith((HashSet<string>)followSet[(string)dictionary1.Key]);
                             continue;
@@ -371,17 +371,27 @@ namespace Interpreter.Grammar
                 {
                     Hashtable hashtable = (Hashtable)predictTable[stack[stack.Count - 1]];
                     string strs = (string)hashtable[kind];                                    //查找预测表
+                    if (kind == "=" && (string)stack[stack.Count - 1] == "Statement4" && (string)stack[stack.Count - 2] == "Array")
+                        strs = "~";
                     string[] all = strs.Split('#');
                     string str = " ";
                     if (all.Length == 1)                                                                //预测表项冲突的情况
                         str = all[0];
                     else
+                    {
                         foreach (string a in all)
                         {
-                            if (a != empty.ToString())
+                            if(a[0] == kind[0])
+                            {
                                 str = a;
-
+                                break;
+                            }
+                            else if(a != empty.ToString() && !IsCapitalLetter(a[0]) && a[0] != kind[0])
+                                continue;
+                            else if (a != empty.ToString() && IsCapitalLetter(a[0]))
+                                str = a;
                         }
+                    }
 
                     if (str != initCharacter && str.Trim() != empty.ToString())   //当对应的推导不为空或者出错时
                     {
