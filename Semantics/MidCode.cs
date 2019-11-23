@@ -21,6 +21,7 @@ namespace Interpreter.Semantics
         public bool isArray = false;                                         //用于动态确定数组长度
         public bool isBreak = false;                                         //判断是否发生中断
         public bool isContinue = false;
+        public bool isStatement = false;                                 //数组是否处于声明阶段，声明索引不能出现标识符
         public int JudgeIndex = 0;                                          //存储循环条件语句位置，便于continue分析
         public int LoopLevel;
         public bool isFunction = false;
@@ -220,6 +221,7 @@ namespace Interpreter.Semantics
         }
         private void Array()                 //数组
         {
+            isStatement = true;
             string name = ((Lexical.Word)Coding[n]).value;   //存储赋值语句左侧的标识符
             next = GetNext(ref n);  //指向数组左侧[
             if (!ListCheck())
@@ -263,6 +265,7 @@ namespace Interpreter.Semantics
             }
             if (isArray)
                 isArray = false;
+            isStatement = false;
         }
         private void Function()           //函数
         {
@@ -462,6 +465,10 @@ namespace Interpreter.Semantics
                     {
                         Block();
                     }
+                   else if(next == ";")  //死循环
+                    {
+                        while (true) ;
+                    }
                     else
                     {
                         Analysis();
@@ -505,6 +512,8 @@ namespace Interpreter.Semantics
                 Analysis();
             if (next == ";")
                 next = GetNext(ref n);
+            if (next == ";")  //死循环
+                while (true) ;
             int index1 = n;  //保存条件索引值
             Expression();
             next = GetNext(ref n);  //跳过;
@@ -540,7 +549,8 @@ namespace Interpreter.Semantics
 
                     n = index2 - 1;  //操作
                     next = GetNext(ref n);
-                    Assignment();
+                    if(next != ")")
+                        Assignment();
 
                     n = index1 - 1;  //判断
                     next = GetNext(ref n);
@@ -1474,7 +1484,7 @@ namespace Interpreter.Semantics
                 return false;
             }
             int temp = n;
-            if (!IsLenghtRight())      //数组长度索引中不能出现标识符
+            if (isStatement && !IsLenghtRight())      //数组长度索引中不能出现标识符
             {
                 Errors.Add(new Lexical.Error(11, ((Lexical.Word)Coding[n - 1]).line, ""));
                 DealError();
