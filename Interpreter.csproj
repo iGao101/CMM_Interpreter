@@ -78,6 +78,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="Semantics\ArrayList.cs" />
     <Compile Include="Semantics\BaseMid.cs" />
     <Compile Include="Semantics\FunctionType.cs" />
     <Compile Include="Semantics\IdentifierAnalysis.cs" />
