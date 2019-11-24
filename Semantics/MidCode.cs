@@ -142,10 +142,6 @@ namespace Interpreter.Semantics
                 case "=":  //赋值
                     n--;
                     Assignment();
-                    if (next == ";")
-                        next = GetNext(ref n);  //跳过;或，
-                    else if (next == ",")           //多声明的情况
-                        Statement();
                     break;
                 case "[":   //数组
                     n--;
@@ -212,12 +208,9 @@ namespace Interpreter.Semantics
                 }
             }
             if (next == ";")
-                next = GetNext(ref n);
-            if(next == ",")
-            {
-                next = GetNext(ref n);
-                Assignment();
-            }
+                next = GetNext(ref n);  //跳过;或，
+            else if (next == ",")           //多声明的情况
+                Statement();
         }
         private void Array()                 //数组
         {
@@ -243,6 +236,7 @@ namespace Interpreter.Semantics
                         DealError();
                         return;
                     }
+                    array.Counts.Add(result);
                 }
                 if (next == "=")  //声明的时候即初始化
                 {
@@ -449,6 +443,10 @@ namespace Interpreter.Semantics
             LoopLevel = level;
             next = GetNext(ref n);  //指向左侧小括号
             next = GetNext(ref n);
+            int t = n;
+            int terminal = GetTerminal("while");
+            n = t - 1;
+            next = GetNext(ref n);
             int index = n;  //保存条件索引值
             Expression();   //执行while条件语句
             next = GetNext(ref n);  //跳过右侧小括号
@@ -476,7 +474,6 @@ namespace Interpreter.Semantics
 
                     if (isBreak)  //循环中止
                     {
-                        int terminal = GetTerminal("while");
                         while (n < Coding.Count - 1 && n != terminal)
                             next = GetNext(ref n);
                         next = GetNext(ref n);  //跳过;
@@ -506,6 +503,9 @@ namespace Interpreter.Semantics
             isLoop = true;
             level++;
             LoopLevel = level;
+            int t = n;
+            int terminal = GetTerminal("for");
+            n = t;
             next = GetNext(ref n);  //指向左侧小括号
             next = GetNext(ref n);
             if(next != ";")
@@ -537,7 +537,6 @@ namespace Interpreter.Semantics
 
                     if (isBreak)  //循环中止
                     {
-                        int terminal = GetTerminal("while");
                         while (n < Coding.Count - 1 && n != terminal)
                             next = GetNext(ref n);
                         next = GetNext(ref n);  //跳过;
@@ -1095,9 +1094,10 @@ namespace Interpreter.Semantics
                         {
                             if(list.Type == 3)  //输出char数组全部内容
                             {
-                                result = null;
+                                result = "\"";
                                 foreach (string i in list.GetValue().Values)
-                                    result += i;
+                                    result += i.ToString();
+                                result += "\"";
                                 next = GetNext(ref n);
                             }
                             else  //其他类型数组即输出第一个元素
@@ -1196,7 +1196,7 @@ namespace Interpreter.Semantics
         }
         private bool IsDecimal(string value)                        //判断字符串是否为小数
         {
-            return Regex.IsMatch(value, @"^[+|-]?\d.{1}?\d*$");
+            return Regex.IsMatch(value, @"^[+|-]?\d*[.]\d*$");
         }
         private bool IsInt(string value)                                 //判断字符串是否为整数
         {
@@ -1246,23 +1246,46 @@ namespace Interpreter.Semantics
         }
         private bool Operation(string n1, string n2, string op)   //执行加减乘除等运算
         {
+            if(n1.Contains("\"") && n2.Contains("\"") && op == "+")  //字符串相加
+            {
+                result = n1 + n2;
+                return true;
+            }
+            ListType list1 = GetList(n1);
+            ListType list2 = GetList(n2);
+            if (list1 != null && list2 != null && op == "+")
+                result = n1 + n2;
+
             if (!IsNumberic(n1) || !IsNumberic(n2))
             {
                 Errors.Add(new Lexical.Error(15, ((Lexical.Word)Coding[n]).line, ""));
                 result = null;
                 return false;
             }
+            bool isInt = false;  //若两数中有一个是int型，则结果转换为int型
             double num1;  //存储转换后的p1 p2
             double num2;
             if (IsDecimal(n1))
                 num1 = double.Parse(n1);
             else
+            {
                 num1 = int.Parse(n1);
-
+                isInt = true;
+            }
             if (IsDecimal(n2))
                 num2 = double.Parse(n2);
             else
+            {
                 num2 = int.Parse(n2);
+                isInt = true;
+            }
+
+            if (isInt)  //强制转换
+            {
+                num1 = (int)num1;
+                num2 = (int)num2;
+            }
+                
             switch (op)
             {
                 case "+":
@@ -1297,6 +1320,12 @@ namespace Interpreter.Semantics
                 case 0:  //int
                     if (IsInt(result))
                         isRight = true;
+                    if (IsDecimal(result))
+                    {
+                        string[] str = result.Split('.');
+                        result = str[0];
+                        isRight = true;
+                    }
                     break;
                 case 1:  //double
                 case 2:  //float
@@ -1370,24 +1399,25 @@ namespace Interpreter.Semantics
         }
         private bool ValuedList(ListType list)                       //根据表达式给数组赋值
         {
-            if(list.Type == 3 && next.Contains("\""))            //字符串给char数组赋值的情况
+            result = next;
+            if (((Lexical.Word)Coding[n]).tag == 5 && ((Lexical.Word)Coding[n + 1]).value == "+")
+                Expression();
+            if (list.Type == 3 && result.Contains("\""))            //字符串给char数组赋值的情况
             {
                 if (list.Length == 0)
-                    list.Length = next.Length - 2;
-                else if(list.Length < next.Length - 2)  //错误处理
+                    list.Length = result.Length - 2;
+                else if(list.Length < result.Length - 2)  //错误处理
                 {
                     Errors.Add(new Lexical.Error(20, ((Lexical.Word)Coding[n - 1]).line, ""));
                     DealError();
                     return false;
                 }
-                else  //赋值
-                {
-                    for (int i = 1; i < next.Length - 1; i++)
-                        list.SetValue(i - 1, "'" + next[i].ToString() + "'");
-                    if (list.Length > next.Length - 2)
-                        for (int i = next.Length - 2; i < list.Length; i++)
-                            list.SetValue(i, "' '");
-                }
+                for (int i = 1; i < result.Length - 1; i++)
+                    list.SetValue(i - 1, "'" + result[i].ToString() + "'");
+                if (list.Length > result.Length - 2)
+                    for (int i = result.Length - 2; i < list.Length; i++)
+                        list.SetValue(i, "' '");
+                next = GetNext(ref n);
                 return true;
             }
 
@@ -1434,38 +1464,37 @@ namespace Interpreter.Semantics
         }
         private bool ValuedArray(ArrayType array)             //根据表达式初始化多维数组
         {
-            ArrayList parm = new ArrayList();
             next = GetNext(ref n);  //跳过等号
-            next = GetNext(ref n);  //跳过左侧第一个大括号
+            next = GetNext(ref n);
             string t = null;
             while (n < Coding.Count - 1 && next != "}")
             {
                 while (n < Coding.Count - 1 && next != "}")
                 {
+                    if(next == "{")
+                    {
+                        next = GetNext(ref n);
+                        continue;
+                    }
                     t += next;
                     next = GetNext(ref n);
                 }
-                t += next;
                 next = GetNext(ref n);
-                parm.Add(t);
-                t = null;
-
-                if (next == ",")
-                {
-                    next = GetNext(ref n);
-                }
             }
             next = GetNext(ref n);  //跳过最右侧大括号
-            if (!isArray && parm.Count > array.Length)
+            t.Replace("{", "");
+            t.Replace("}", "");
+            string[] parms = t.Split(',');
+            if (!isArray && parms.Length > array.Length * array.GetSum(0))
             {
                 Errors.Add(new Lexical.Error(20, ((Lexical.Word)Coding[n - 1]).line, ""));
                 DealError();
                 return false;
             }
             if (isArray)  //根据元素个数默认赋值
-                array.Length = parm.Count;
-            for (int i = 0; i < parm.Count; i++)  //多维数组添加元素
-                array.SetValue(i, (string)parm[0]);
+                array.Length = parms.Length;
+            for (int i = 0; i < parms.Length; i++)  //多维数组添加元素
+                array.SetValue(i, parms[i]);
             return true;
         }
         private bool ListCheck()                                           //检查数组访问是否越界等问题
@@ -1526,16 +1555,26 @@ namespace Interpreter.Semantics
                 }
                 list.SetValue(index, result);  //给数组赋值
             }
+            else  //多维数组赋值
+            {
+                ArrayType array = GetArray(name);
+                if (array != null)
+                {
+                    int sum = GetArrayIndex(array);
+                    if (sum == 0)
+                        return;
+                    next = GetNext(ref n);  //跳过等号
+                    Expression();
+                    if (!TypeCheck(array.Type))
+                    {
+                        Errors.Add(new Lexical.Error(18, ((Lexical.Word)Coding[n - 1]).line, ""));
+                        DealError();
+                        return;
+                    }
+                    array.SetValue(sum, result);
+                }
+            }
         }
-        private string[] GetElements(string str)
-        {
-            if (str.Length <= 2)
-                return null;
-            string temp = null;
-            for (int i = 1; i < str.Length - 1; i++)
-                temp += str[i];
-            return temp.Split(',');
-        }                 //根据字符串拆解元素
         private void GetListValue(string name)                    //获取数组值
         {
             if (!ListCheck())
@@ -1561,33 +1600,14 @@ namespace Interpreter.Semantics
                         result = list.GetValue(int.Parse(result));
                 }
             }
-            else
+            else  //多维数组取值
             {
                 ArrayType array = GetArray(name);
                 if (array != null)
                 {
-                    if (int.Parse(result) >= array.Length)  //索引大于数组长度
-                    {
-                        Errors.Add(new Lexical.Error(13, ((Lexical.Word)Coding[n - 1]).line, ""));
-                        DealError();
-                        return;
-                    }
-                    string all = array.GetValue(int.Parse(result));  //可能是多维度的数据
-                    while(n <Coding.Count -1 && next == "[")
-                    {
-                        if (!ListCheck())
-                            return;
-                        int index = int.Parse(result);  //获得索引
-                        string[] elements = GetElements(all);
-                        if(index >= array.Length)
-                        {
-                            Errors.Add(new Lexical.Error(13, ((Lexical.Word)Coding[n - 1]).line, ""));
-                            DealError();
-                            return;
-                        }
-                        all = elements[index];
-                    }
-                    result = all;
+                    int sum = GetArrayIndex(array);
+                    if(sum != 0)
+                        result = array.GetValue(sum);
                 }
             }
         }
@@ -1722,13 +1742,41 @@ namespace Interpreter.Semantics
             }
             return terminal;
         }
+        private int GetArrayIndex(ArrayType array)             //根据表达式获取多维数组总的索引
+        {
+            if (int.Parse(result) >= array.Length)  //索引大于数组长度
+            {
+                Errors.Add(new Lexical.Error(13, ((Lexical.Word)Coding[n - 1]).line, ""));
+                DealError();
+                return 0;
+            }
+            int sum = int.Parse(result);  //计算总的索引
+            int i = 0;
+            sum = sum * array.GetSum(i);
+            while (n < Coding.Count - 1 && next == "[")
+            {
+                if (!ListCheck())
+                    return 0;
+                i++;
+                int index = int.Parse(result);  //获得索引
+                if (index > array.Length)
+                {
+                    Errors.Add(new Lexical.Error(13, ((Lexical.Word)Coding[n - 1]).line, ""));
+                    DealError();
+                    return 0;
+                }
+                index = index * array.GetSum(i);
+                sum += index;
+            }
+            return sum;
+        }
         private void DealError()                                            //错误处理，发生错误，跳过当前行
         {
             int line = ((Lexical.Word)Coding[n]).line;  //获取错误行
             if (isJudge || isLoop) //分支语句错误
             {
                 bool isAppear = false;
-                while (n < Coding.Count - 1 && (((Lexical.Word)Coding[n]).line < line + 1 || next != ";"))
+                while (next != "else" && n < Coding.Count - 1 && (((Lexical.Word)Coding[n]).line < line + 1 || next != ";"))
                 {
                     if (next == "{")
                     {
@@ -1742,10 +1790,10 @@ namespace Interpreter.Semantics
                     }
                     next = GetNext(ref n);
                 }
-                if (!isAppear)          //未出现大括号，跳过；
+                if (next != "else" && !isAppear)          //未出现大括号，跳过；
                     next = GetNext(ref n);
-                if (isLoop)
-                    return;
+                //if (isLoop)
+                //    return;
                 while (next == "else")
                 {
                     next = GetNext(ref n);

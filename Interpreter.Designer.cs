@@ -40,9 +40,9 @@
             this.richTextBox1 = new System.Windows.Forms.RichTextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.richTextBox3 = new System.Windows.Forms.RichTextBox();
+            this.button3 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
-            this.button3 = new System.Windows.Forms.Button();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -142,19 +142,21 @@
             // 
             // label1
             // 
-            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.label1.Location = new System.Drawing.Point(64, 245);
+            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.label1.Location = new System.Drawing.Point(27, 74);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(554, 24);
+            this.label1.Size = new System.Drawing.Size(29, 98);
             this.label1.TabIndex = 2;
             this.label1.Text = "第0行";
             // 
             // richTextBox2
             // 
+            this.richTextBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
             this.richTextBox2.BackColor = System.Drawing.SystemColors.ButtonFace;
             this.richTextBox2.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.richTextBox2.Enabled = false;
             this.richTextBox2.Font = new System.Drawing.Font("Adobe Pi Std", 13.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.richTextBox2.ForeColor = System.Drawing.Color.Purple;
             this.richTextBox2.Location = new System.Drawing.Point(30, 3);
@@ -167,7 +169,8 @@
             // 
             // richTextBox1
             // 
-            this.richTextBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.richTextBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.richTextBox1.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.richTextBox1.BulletIndent = 2;
@@ -209,6 +212,17 @@
             this.richTextBox3.Text = "";
             this.richTextBox3.WordWrap = false;
             // 
+            // button3
+            // 
+            this.button3.Location = new System.Drawing.Point(20, 143);
+            this.button3.Name = "button3";
+            this.button3.Size = new System.Drawing.Size(86, 37);
+            this.button3.TabIndex = 4;
+            this.button3.Text = "语法分析";
+            this.button3.UseVisualStyleBackColor = true;
+            this.button3.Click += new System.EventHandler(this.Button3_Click);
+            this.button3.MouseDown += new System.Windows.Forms.MouseEventHandler(this.ButtonEx1_MouseDown);
+            // 
             // button2
             // 
             this.button2.Font = new System.Drawing.Font("宋体", 9F);
@@ -230,17 +244,6 @@
             this.button1.Text = "词法分析";
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.Button1_Click);
-            // 
-            // button3
-            // 
-            this.button3.Location = new System.Drawing.Point(20, 143);
-            this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(86, 37);
-            this.button3.TabIndex = 4;
-            this.button3.Text = "语法分析";
-            this.button3.UseVisualStyleBackColor = true;
-            this.button3.Click += new System.EventHandler(this.Button3_Click);
-            this.button3.MouseDown += new System.Windows.Forms.MouseEventHandler(this.ButtonEx1_MouseDown);
             // 
             // Interpreter
             // 

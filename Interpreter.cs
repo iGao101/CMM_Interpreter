@@ -64,11 +64,11 @@ namespace Interpreter
             //we'll use its Y value for calculating numberLabel size
             pos = this.richTextBox1.GetPositionFromCharIndex(lastIndex);
 
-            richTextBox2.Text = "";
-            for (int i = firstLine; i < lastLine + 1; i++)
-            {
-                richTextBox2.Text += i + 1 + "\r\n";
-            }
+            //richTextBox2.Text = "";
+            //for (int i = firstLine; i < lastLine + 1; i++)
+            //{
+            //    richTextBox2.Text += i + 1 + "\r\n";
+            //}
         }
 
         //鼠标点击

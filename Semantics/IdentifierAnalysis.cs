@@ -230,9 +230,9 @@ namespace Interpreter.Semantics
             }
             name = GetNext(ref i);
             next = GetNext(ref i);
-            int range = GetRange();
-            if (level == 0)
-                range = 0;
+            int range = 0;
+            if (level != 0)
+                range = GetRange();
             if (next == ";" || next == "," || (next==")" && isFunction))       //仅声明，未赋值
             {
                 VarType v = null;
@@ -266,10 +266,10 @@ namespace Interpreter.Semantics
                 next = GetNext(ref i);
             next = GetNext(ref i);              //跳过右侧
 
-            int range = GetRange();
-            if (level == 0)
-                range = 0;
-            
+            int range = 0;
+            if (level != 0)
+                range = GetRange();
+
             if (next == "[")                          //多维数组的情况
             {
                 int n = 2;  //数组维度
@@ -292,8 +292,7 @@ namespace Interpreter.Semantics
             else
                 Errors.Add(new Lexical.Error(8, ((Lexical.Word)Coding[i]).line, name));
 
-            string value = ((Lexical.Word)Coding[i +1]).value;  //向后看，判断数组是否初始化
-            if (value == "=")  //int a[3]={1,2,3};
+            if (next == "=")  //int a[3]={1,2,3};
             {
                 if(type == 3 && ((Lexical.Word)Coding[i + 2]).value.Contains("\""))  //此为字符串给char数组赋值的情况，MidCode有处理，因此这里略过
                 {  
@@ -417,7 +416,6 @@ namespace Interpreter.Semantics
                 while (i < Coding.Count && next != "}")
                     Analysis();
                 next = GetNext(ref i);
-                i++;                   //跳过右侧大括号
                 level--;
             }
             else                       //若不是 { 
@@ -552,9 +550,9 @@ namespace Interpreter.Semantics
         }
         private void SaveVar()                      //保存标识符
         {
-            int range = GetRange();
-            if (level == 0)
-                range = 0;
+            int range = 0;
+            if (level != 0)
+                range = GetRange();
             VarType v = null;
             if (isValued || level == 0)
                 v = new VarType(name, type, level, true, range);
@@ -597,16 +595,18 @@ namespace Interpreter.Semantics
             {
                 int temp2 = count;
                 while (i < Coding.Count - 1 && next != "}")
+                {
                     next = GetNext(ref i);
+                    if (i < Coding.Count - 1 && next == "{")
+                        next = GetNext(ref i);
+                    next = GetNext(ref i);
+                }
+                count = temp2;
             }
             int index = ((Lexical.Word)Coding[i]).line;
             i = temp - 1;
             next = GetNext(ref i);
             return index;
-        }
-        private bool IsInt(string value)         //判断字符串是否为整数
-        {
-            return Regex.IsMatch(value, @"^[+|-]?\d*$");
         }
     }
 }
