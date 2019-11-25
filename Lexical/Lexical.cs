@@ -159,7 +159,7 @@ namespace Interpreter.Lexical
                 if (((Word)Coding[Coding.Count - 1]).tag == 4)
                     return true;
             }
-            if (Token.Identifiers.Contains(((Word)Coding[Coding.Count - 1]).value) || ((Word)Coding[Coding.Count - 1]).value == ")")
+            if (Token.Identifiers.Contains(((Word)Coding[Coding.Count - 1]).value) || ((Word)Coding[Coding.Count - 1]).value == ")" || ((Word)Coding[Coding.Count - 1]).value == "]")
                 return true;
             return false;
         }

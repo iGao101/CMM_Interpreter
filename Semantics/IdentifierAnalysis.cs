@@ -24,8 +24,9 @@ namespace Interpreter.Semantics
         public int isJudge = 0;                                                 //判读是否为判断语句
         public int  isLoop = 0;                                                  //判断是否为循环语句
         public int isBlock = 0;                                                   //判断是否为代码块
-        public bool isFor = false;
+        public int isFor = 0;
         public bool isSingle = false;                                         //辅助计算局部变量作用域
+        public bool isInside = false;
         public bool isBelongToJudge = false;
         public bool isValued = false;                                       //是否初始化
         public string name = null;                                            //标识符名称
@@ -189,7 +190,10 @@ namespace Interpreter.Semantics
             if (next == "[")      //数组
             {
                 Array();
-                SaveMul();
+                if (next == ";")
+                    next = GetNext(ref i);
+                else if(next == ",")
+                    SaveMul();
             }
 
             if(next == "(")       //函数
@@ -294,10 +298,11 @@ namespace Interpreter.Semantics
 
             if (next == "=")  //int a[3]={1,2,3};
             {
-                if(type == 3 && ((Lexical.Word)Coding[i + 2]).value.Contains("\""))  //此为字符串给char数组赋值的情况，MidCode有处理，因此这里略过
+                if(type == 3 && ((Lexical.Word)Coding[i + 1]).value.Contains("\""))  //此为字符串给char数组赋值的情况，MidCode有处理，因此这里略过
                 {  
                     next = GetNext(ref i);
                     next = GetNext(ref i);
+                    return;
                 }
                 else
                 {
@@ -394,7 +399,7 @@ namespace Interpreter.Semantics
         private void For()                             //for循环语句
         {
             i++;
-            isFor = true;
+            isFor ++;
             count++;
             isLoop++;
             next = GetNext(ref i);
@@ -412,11 +417,13 @@ namespace Interpreter.Semantics
             if (next == "{")      //代码块
             {
                 isSingle = true;
+                isInside = true;
                 next = GetNext(ref i);
                 while (i < Coding.Count && next != "}")
                     Analysis();
                 next = GetNext(ref i);
                 level--;
+                isInside = false;
             }
             else                       //若不是 { 
             {
@@ -425,7 +432,7 @@ namespace Interpreter.Semantics
                 level--;
             }
             isLoop--;
-            isFor = true;
+            isFor--;
         }
         private void Do()                             //do while循环语句
         {
@@ -480,6 +487,7 @@ namespace Interpreter.Semantics
                 Assignment();
             next = GetNext(ref i);
             next = GetNext(ref i);  //跳过左侧大括号
+            isInside = true;
             bool isReDefined = FunctionCheck(funtion);
             if (!isReDefined)  //未重定义
             {
@@ -490,7 +498,7 @@ namespace Interpreter.Semantics
             else                    //重定义
                 while (i < Coding.Count - 1 && next != "}")
                     next = GetNext(ref i);
-
+            isInside = false;
             next = GetNext(ref i);  //跳过右侧大括号
             level--;
             isFunction = false;
@@ -591,18 +599,41 @@ namespace Interpreter.Semantics
         private int GetRange()                      //获取局部变量的作用范围
         {
             int temp = i;
-            if(((isJudge !=0 || isLoop != 0 || isBlock != 0) && isSingle) || isFunction || isFor)
+            int temp2 = count;
+            if ((isFunction || isFor != 0) && !isInside)
             {
-                int temp2 = count;
-                while (i < Coding.Count - 1 && next != "}")
+                int line = ((Lexical.Word)Coding[i]).line;
+                while(i < Coding.Count - 2 && ((Lexical.Word)Coding[i]).line <= line + 1)
                 {
                     next = GetNext(ref i);
-                    if (i < Coding.Count - 1 && next == "{")
-                        next = GetNext(ref i);
-                    next = GetNext(ref i);
+                    if(next == "{")
+                    {
+                        int count = 1;
+                        while (i < Coding.Count - 1 && count != 0)
+                        {
+                            next = GetNext(ref i);
+                            if (next == "{")
+                                count++;
+                            if (next == "}")
+                                count--;
+                        }
+                        break;
+                    }
                 }
-                count = temp2;
             }
+            else if (((isJudge != 0 || isLoop != 0 || isBlock != 0) && isSingle) || isFunction || isFor != 0)
+            {
+                int count = 1;
+                while (i < Coding.Count - 1 && count != 0)
+                {
+                    next = GetNext(ref i);
+                    if (next == "{")
+                        count++;
+                    if (next == "}")
+                        count--;
+                }
+            }
+            count = temp2;
             int index = ((Lexical.Word)Coding[i]).line;
             i = temp - 1;
             next = GetNext(ref i);

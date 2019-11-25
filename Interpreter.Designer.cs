@@ -63,7 +63,7 @@
             this.退出ToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(782, 28);
+            this.menuStrip1.Size = new System.Drawing.Size(782, 30);
             this.menuStrip1.TabIndex = 0;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -99,7 +99,7 @@
             // splitContainer1
             // 
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer1.Location = new System.Drawing.Point(0, 28);
+            this.splitContainer1.Location = new System.Drawing.Point(0, 30);
             this.splitContainer1.Name = "splitContainer1";
             // 
             // splitContainer1.Panel1
@@ -111,7 +111,7 @@
             this.splitContainer1.Panel2.Controls.Add(this.button3);
             this.splitContainer1.Panel2.Controls.Add(this.button2);
             this.splitContainer1.Panel2.Controls.Add(this.button1);
-            this.splitContainer1.Size = new System.Drawing.Size(782, 425);
+            this.splitContainer1.Size = new System.Drawing.Size(782, 423);
             this.splitContainer1.SplitterDistance = 639;
             this.splitContainer1.TabIndex = 1;
             // 
@@ -136,8 +136,8 @@
             this.splitContainer2.Panel2.BackColor = System.Drawing.SystemColors.GradientInactiveCaption;
             this.splitContainer2.Panel2.Controls.Add(this.label2);
             this.splitContainer2.Panel2.Controls.Add(this.richTextBox3);
-            this.splitContainer2.Size = new System.Drawing.Size(639, 425);
-            this.splitContainer2.SplitterDistance = 275;
+            this.splitContainer2.Size = new System.Drawing.Size(639, 423);
+            this.splitContainer2.SplitterDistance = 273;
             this.splitContainer2.TabIndex = 0;
             // 
             // label1
@@ -146,7 +146,7 @@
             | System.Windows.Forms.AnchorStyles.Left)));
             this.label1.Location = new System.Drawing.Point(27, 74);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(29, 98);
+            this.label1.Size = new System.Drawing.Size(29, 96);
             this.label1.TabIndex = 2;
             this.label1.Text = "第0行";
             // 
@@ -163,7 +163,7 @@
             this.richTextBox2.Name = "richTextBox2";
             this.richTextBox2.ReadOnly = true;
             this.richTextBox2.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.None;
-            this.richTextBox2.Size = new System.Drawing.Size(36, 204);
+            this.richTextBox2.Size = new System.Drawing.Size(36, 202);
             this.richTextBox2.TabIndex = 1;
             this.richTextBox2.Text = "";
             // 
@@ -178,7 +178,7 @@
             this.richTextBox1.Location = new System.Drawing.Point(64, 5);
             this.richTextBox1.Name = "richTextBox1";
             this.richTextBox1.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.ForcedBoth;
-            this.richTextBox1.Size = new System.Drawing.Size(554, 222);
+            this.richTextBox1.Size = new System.Drawing.Size(554, 220);
             this.richTextBox1.TabIndex = 0;
             this.richTextBox1.Text = "";
             this.richTextBox1.WordWrap = false;

@@ -159,18 +159,18 @@ namespace Interpreter
 
             ArrayList Output = midCode.OutputInfo;
             richTextBox3.Text = "";
-            richTextBox3.Text = richTextBox3.Text + "变量:" + "\r\n";
-            foreach (Semantics.VarType va in VarSet)
-                richTextBox3.Text = richTextBox3.Text + va.Name + " " + va.Type + " " + va.Level + " " + va.Count + "  "+ va.IsValued +"\r\n";
-            richTextBox3.Text = richTextBox3.Text + "数组:" + "\r\n";
-            foreach (Semantics.ListType list in ListSet)
-                richTextBox3.Text = richTextBox3.Text + list.Name + " " + list.Type + " " + list.Level +" "+ list.Length + " " + list.Count + "\r\n";
-            richTextBox3.Text = richTextBox3.Text + "多维数组:" + "\r\n";
-            foreach (Semantics.ArrayType array in ArraySet)
-                richTextBox3.Text = richTextBox3.Text + array.Name + " " + array.Type + " " + array.Level + " " + array.Length + " " + array.Count + "\r\n";
-            richTextBox3.Text = richTextBox3.Text + "函数:" + "\r\n";
-            foreach (Semantics.FunctionType function in FunctionSet)
-                richTextBox3.Text = richTextBox3.Text + function.Name + " " + function.Type + " " + function.Level + "\r\n";
+            //richTextBox3.Text = richTextBox3.Text + "变量:" + "\r\n";
+            //foreach (Semantics.VarType va in VarSet)
+            //    richTextBox3.Text = richTextBox3.Text + va.Name + " " + va.Type + " " + va.Level + " " + va.Count + "  "+ va.IsValued +"\r\n";
+            //richTextBox3.Text = richTextBox3.Text + "数组:" + "\r\n";
+            //foreach (Semantics.ListType list in ListSet)
+            //    richTextBox3.Text = richTextBox3.Text + list.Name + " " + list.Type + " " + list.Level +" "+ list.Length + " " + list.Count + "\r\n";
+            //richTextBox3.Text = richTextBox3.Text + "多维数组:" + "\r\n";
+            //foreach (Semantics.ArrayType array in ArraySet)
+            //    richTextBox3.Text = richTextBox3.Text + array.Name + " " + array.Type + " " + array.Level + " " + array.Length + " " + array.Count + "\r\n";
+            //richTextBox3.Text = richTextBox3.Text + "函数:" + "\r\n";
+            //foreach (Semantics.FunctionType function in FunctionSet)
+            //    richTextBox3.Text = richTextBox3.Text + function.Name + " " + function.Type + " " + function.Level + "\r\n";
             foreach (string info in Output)
                 richTextBox3.Text = richTextBox3.Text + info + "\r\n";
             ArrayList errorInfos = lexical.ErrorInfo();      //推导过程中的错误
