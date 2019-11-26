@@ -72,18 +72,18 @@ namespace Interpreter.Grammar
                                                          "Jump1->Jump|  ~",
                                                          "Judge->if ( Expression ) Judge5",
                                                          "Judge5->if ( Expression ) Judge5|  Judge4",
-                                                         "Context->{ S Jump1 }|  Statement|  Expression ;|  Loop|  Output|  ;|  Jump",
+                                                         "Context->{ S Jump1 }|  Statement|  Assignment ;|  Loop|  Output|  ;|  Jump",
                                                          "Judge4->Context Judge2",
                                                          "Judge2->else Judge3|  ~",
                                                          "Judge3->if ( Expression ) Context Judge2|  Context",
 
                                                          "Operator-><|  >=|  >|  <=|  <>|  ==",
                                                          "Loop->while ( Expression )  Loop1|  do Loop2|  for ( Loop3 Loop5 ; Assignment ) Loop4",
-                                                         "Loop1->while ( Expression )  Loop1|  Statement|  Expression|  Judge|  Output|  { S }|  ;",
-                                                         "Loop2->do Loop2|  { S } while ( Expression ) ;|  Statement while ( Expression ) ;|  Expression while ( Expression ) ;|  Judge while ( Expression ) ;",
+                                                         "Loop1->while ( Expression )  Loop1|  Statement|  Assignment ;|  Judge|  Output|  { S }|  ;",
+                                                         "Loop2->do Loop2|  { S } while ( Expression ) ;|  Statement while ( Expression ) ;|  Assignment ; while ( Expression ) ;|  Judge while ( Expression ) ;",
                                                          "Loop3->Assignment|  Statement|  ;",
                                                          "Loop5->Expression|  ~",
-                                                         "Loop4->for ( Loop3 Loop5 ; Assignment ) Loop4|  { S }|  Statement|  Expression|  Output|  Judge|  ;"
+                                                         "Loop4->for ( Loop3 Loop5 ; Assignment ) Loop4|  { S }|  Statement|  Assignment ;|  Output|  Judge|  ;"
                                                          };
     }
 }
