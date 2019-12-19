@@ -102,7 +102,6 @@ namespace Interpreter.Lexical
                     if (text[i + 1] == '/')                                                //为单行注释
                     {
                         line++;
-                        //codes.Add('\n');
                         while (i < text.Length && text[i] != '\n' )         //跳过改行数据
                             i++;
                         continue;
@@ -124,7 +123,6 @@ namespace Interpreter.Lexical
                         if (i < text.Length - 1 && text[i + 2] == '\n' || text[i + 2] == '\r')
                         {
                             line++;                                                         //不出错情况下，跳出循环后i指向*号
-                            //codes.Add('\n');
                         }
                         i += 3;                                                              //i+=2,跳过 */
                         continue;

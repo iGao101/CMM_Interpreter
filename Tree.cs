@@ -12,10 +12,10 @@ namespace Interpreter
 {
     public partial class Tree : Form
     {
-        Pi p;
-        public Tree(TreeView tree, Pi p)
+        Interpreter interpreter = new Interpreter();
+        public Tree(Interpreter interpreter, TreeView tree)
         {
-            this.p = p;
+            this.interpreter = interpreter;
             tree.Location = new Point(5, 5);
             tree.Size = new Size(680, 380);
             tree.ShowLines = true;
@@ -28,10 +28,10 @@ namespace Interpreter
             InitializeComponent();
             this.Controls.Add(tree);
         }
-
+        //当前窗体退出
         private void Tree_FormClosing(object sender, FormClosingEventArgs e)
         {
-            p.TopMost = true;
+            interpreter.Show();
         }
     }
 }

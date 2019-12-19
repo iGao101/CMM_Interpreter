@@ -65,12 +65,6 @@
     <Compile Include="Lexical\Error.cs" />
     <Compile Include="Lexical\Lexical.cs" />
     <Compile Include="Lexical\Word.cs" />
-    <Compile Include="Pi.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Pi.Designer.cs">
-      <DependentUpon>Pi.cs</DependentUpon>
-    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -102,9 +96,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Interpreter.resx">
       <DependentUpon>Interpreter.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Pi.resx">
-      <DependentUpon>Pi.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

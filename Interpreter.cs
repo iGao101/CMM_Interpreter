@@ -26,10 +26,16 @@ namespace Interpreter
             bool show = false;
             if (lexical.Errors.Count == 0)
                 show = true;
-            int num = tree.Nodes.Count;
-            Pi pi = new Pi(this, tree, show);                                                                  //跳转到下一个窗体
-            this.Hide();
-            pi.ShowDialog();
+            if (show)
+            {
+                Tree t = new Tree(this, tree);
+                this.Hide();
+                t.ShowDialog();
+            }
+            else
+            {
+                MessageBox.Show("Lexical error");
+            }  
         }
 
         //richtextbox1内容改变自动调用该函数
@@ -49,26 +55,17 @@ namespace Interpreter
 
         private void updateLabelRowIndex()
         {
-            //we get index of first visible char and number of first visible line
+            //获取第一行第一个数字或字母的索引
             Point pos = new Point(0, 0);
             int firstIndex = this.richTextBox1.GetCharIndexFromPosition(pos);
             int firstLine = this.richTextBox1.GetLineFromCharIndex(firstIndex);
 
-            //now we get index of last visible char and number of last visible line
+            //获得最后一行最后一个数字或字幕得索引
             pos.X += this.richTextBox1.ClientRectangle.Width;
             pos.Y += this.richTextBox1.ClientRectangle.Height;
             int lastIndex = this.richTextBox1.GetCharIndexFromPosition(pos);
             int lastLine = this.richTextBox1.GetLineFromCharIndex(lastIndex);
-
-            //this is point position of last visible char, 
-            //we'll use its Y value for calculating numberLabel size
             pos = this.richTextBox1.GetPositionFromCharIndex(lastIndex);
-
-            //richTextBox2.Text = "";
-            //for (int i = firstLine; i < lastLine + 1; i++)
-            //{
-            //    richTextBox2.Text += i + 1 + "\r\n";
-            //}
         }
 
         //鼠标点击
@@ -109,12 +106,15 @@ namespace Interpreter
             if (richTextBox1.Text == "")
                 return;
             lexical = new Lexical.Lexical();
-            ArrayList source = lexical.ReadFromScreen(richTextBox1.Text);
+            ArrayList source = lexical.ReadFromScreen(richTextBox1.Text); //源文件字符数组
             lexical.GetToken(source);
             string[] infos = lexical.SaveToken();
             richTextBox3.Text = "";
             foreach (string info in infos)
                 richTextBox3.Text = richTextBox3.Text + info + "\r\n";
+            ArrayList errorInfos = lexical.ErrorInfo();      //推导过程中的错误
+            foreach (string error in errorInfos)
+                richTextBox3.Text = richTextBox3.Text + error + "\r\n";
         }
 
         //语法
@@ -124,7 +124,7 @@ namespace Interpreter
             ArrayList source = lexical.ReadFromScreen(richTextBox1.Text);
             lexical.GetToken(source);
 
-            if (lexical == null)
+            if (lexical == null)  //如果为空，退出
                 return;
             grammar = new Grammar.Grammar();
             grammar.Init();
@@ -143,14 +143,18 @@ namespace Interpreter
         //语义
         private void Button2_Click(object sender, EventArgs e)
         {
-            lexical = new Lexical.Lexical();
+            lexical = new Lexical.Lexical();  //执行语义前，先执行词法和语法部分
             ArrayList source = lexical.ReadFromScreen(richTextBox1.Text);
             lexical.GetToken(source);
+            grammar = new Grammar.Grammar();
+            grammar.Init();
+            if (lexical.Errors.Count == 0)
+                grammar.SyntaxAnalysis(lexical.Coding, lexical.Errors);
 
             Semantics.IdentifierAnalysis identifier = new Semantics.IdentifierAnalysis(lexical.Coding, lexical.Errors);
             Semantics.MidCode midCode = new Semantics.MidCode(lexical.Coding, lexical.Errors);
             identifier.Init();
-            ArrayList VarSet = identifier.VarSet;
+            ArrayList VarSet = identifier.VarSet;  //初始化变量、数组、函数、多维数组集合
             ArrayList ListSet = identifier.ListSet;
             ArrayList FunctionSet = identifier.FunctionSet;
             ArrayList ArraySet = identifier.ArraySet;
@@ -159,18 +163,6 @@ namespace Interpreter
 
             ArrayList Output = midCode.OutputInfo;
             richTextBox3.Text = "";
-            //richTextBox3.Text = richTextBox3.Text + "变量:" + "\r\n";
-            //foreach (Semantics.VarType va in VarSet)
-            //    richTextBox3.Text = richTextBox3.Text + va.Name + " " + va.Type + " " + va.Level + " " + va.Count + "  "+ va.IsValued +"\r\n";
-            //richTextBox3.Text = richTextBox3.Text + "数组:" + "\r\n";
-            //foreach (Semantics.ListType list in ListSet)
-            //    richTextBox3.Text = richTextBox3.Text + list.Name + " " + list.Type + " " + list.Level +" "+ list.Length + " " + list.Count + "\r\n";
-            //richTextBox3.Text = richTextBox3.Text + "多维数组:" + "\r\n";
-            //foreach (Semantics.ArrayType array in ArraySet)
-            //    richTextBox3.Text = richTextBox3.Text + array.Name + " " + array.Type + " " + array.Level + " " + array.Length + " " + array.Count + "\r\n";
-            //richTextBox3.Text = richTextBox3.Text + "函数:" + "\r\n";
-            //foreach (Semantics.FunctionType function in FunctionSet)
-            //    richTextBox3.Text = richTextBox3.Text + function.Name + " " + function.Type + " " + function.Level + "\r\n";
             foreach (string info in Output)
                 richTextBox3.Text = richTextBox3.Text + info + "\r\n";
             ArrayList errorInfos = lexical.ErrorInfo();      //推导过程中的错误
