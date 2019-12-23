@@ -77,7 +77,6 @@
     <Compile Include="Semantics\IdentifierAnalysis.cs" />
     <Compile Include="Semantics\ListType.cs" />
     <Compile Include="Semantics\MidCode.cs" />
-    <Compile Include="Semantics\Semantics.cs" />
     <Compile Include="Semantics\VarType.cs" />
     <Compile Include="Token.cs" />
     <Compile Include="Tree.cs">

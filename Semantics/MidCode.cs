@@ -41,7 +41,6 @@ namespace Interpreter.Semantics
         public ArrayList ArraySet = new ArrayList();                 //多维数组
         public ArrayList FunctionSet = new ArrayList();           //函数集合
         public ArrayList OutputInfo = new ArrayList();            //保存输出信息
-        public ArrayList MidCodeList = new ArrayList();          //保存分析得到的四元式
 
         public MidCode(ArrayList array, ArrayList errors)       //获取词法分析的token数组
         {

@@ -152,7 +152,7 @@ namespace Interpreter.Grammar
                 }
                 predictTable.Add(non, hashtable);
             }
-
+            //遍历每个推导
             foreach (string input in inputExperssion)
             {
                 Hashtable hashtable = new Hashtable();

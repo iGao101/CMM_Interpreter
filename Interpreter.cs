@@ -146,10 +146,6 @@ namespace Interpreter
             lexical = new Lexical.Lexical();  //执行语义前，先执行词法和语法部分
             ArrayList source = lexical.ReadFromScreen(richTextBox1.Text);
             lexical.GetToken(source);
-            grammar = new Grammar.Grammar();
-            grammar.Init();
-            if (lexical.Errors.Count == 0)
-                grammar.SyntaxAnalysis(lexical.Coding, lexical.Errors);
 
             Semantics.IdentifierAnalysis identifier = new Semantics.IdentifierAnalysis(lexical.Coding, lexical.Errors);
             Semantics.MidCode midCode = new Semantics.MidCode(lexical.Coding, lexical.Errors);

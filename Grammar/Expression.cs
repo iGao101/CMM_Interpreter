@@ -10,7 +10,7 @@ namespace Interpreter.Grammar
     class Expression
     {
         //scan print
-        public string[] expression = { "S->Statement S|  Judge S|  Loop S|  Output  S|  Expression S|  Function S|  ~|  ; S|  Block S" ,
+        public string[] expression = { "S->Statement S|  Judge S|  Loop S|  Output  S|  Input S|  Expression S|  Function S|  ~|  ; S|  Block S" ,
 
                                                          "Block->{ S }",
                                                          "Function->void identifier ( Parameter ) { S Return }",
@@ -33,7 +33,7 @@ namespace Interpreter.Grammar
 
                                                          "Constant1->~|  , Expression Constant1",
                                                          "Output->printf ( Expression ) ;",
-                                                         "Input->scanf ( identifier )",
+                                                         "Input->scanf ( identifier  ) ;",
 
                                                          "Statement2->Arithmetic2 ;|  [ List2 Arithmetic2 ;|  = Expression Arithmetic2 ;|  ( Parameter ) { S Return1 }",
                                                          "Statement5->~|  [ List2|  = Expression",
